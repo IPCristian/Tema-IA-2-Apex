@@ -302,50 +302,6 @@ class Joc:
 
         return False
 
-    def final_vechi(self):
-        if not self.ultima_mutare:  # daca e inainte de prima mutare
-            return False
-
-        culori = [self.__class__.JMIN, self.__class__.JMAX]
-        directii = [(0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1), (1, 0), (-1, 0)]
-        # Am decis arbitrar ca x (Negru) sa aiba stanga-jos, dreapta-sus
-        # iar 0 (Alb) sa aiba stanga-sus, dreapta-jos
-        for culoare in culori:
-            coada = []
-            vizitate = []
-
-            if culoare == 'x':
-                start = (0, self.__class__.NR_COLOANE - 1)
-                stop = (self.__class__.NR_LINII - 1, 0)
-            else:
-                start = (0, 0)
-                stop = (self.__class__.NR_LINII - 1, self.__class__.NR_COLOANE - 1)
-            coada.append(copy.deepcopy(start))
-
-            if self.matr[start[0]][start[1]] != culoare:
-                continue
-
-            while coada:
-                poz_crt = coada.pop(0)
-                vizitate.append(poz_crt)
-
-                for directie in directii:
-                    nou = (poz_crt[0] + directie[0], poz_crt[1] + directie[1])
-
-                    if not 0 <= nou[0] < self.__class__.NR_LINII or not 0 <= nou[1] < self.__class__.NR_COLOANE:
-                        continue
-
-                    if not self.matr[nou[0]][nou[1]] == culoare:
-                        continue
-
-                    if nou == stop:
-                        return culoare
-
-                    if nou not in vizitate:
-                        coada.append(nou)
-
-        return False
-
     def mutari(self, jucator):
         l_mutari = []
 
@@ -436,6 +392,7 @@ class Joc:
                                 if self.matr[poz_noua[0]][poz_noua[1]] == jucator:
                                     continue
 
+                                # Daca capturam o piesa adversara, avem grija sa nu capturam un vecin
                                 ver = 1
                                 if self.matr[poz_noua[0]][poz_noua[1]] != self.__class__.GOL:
                                     for verificare in directii:
@@ -457,49 +414,6 @@ class Joc:
 
         return l_mutari
 
-    # linie deschisa inseamna linie pe care jucatorul mai poate forma o configuratie castigatoare
-    # practic e o linie fara simboluri ale jucatorului opus
-    def linie_deschisa(self, lista, jucator):
-        jo = self.jucator_opus(jucator)
-        # verific daca pe linia data nu am simbolul jucatorului opus
-        if not jo in lista:
-            # return 1
-            return lista.count(jucator)
-        return 0
-
-    def linii_deschise(self, jucator):
-
-        linii = 0
-        for i in range(self.__class__.NR_LINII):
-            for j in range(self.__class__.NR_COLOANE - 3):
-                linii += self.linie_deschisa(self.matr[i][j:j + 4], jucator)
-
-        for j in range(self.__class__.NR_COLOANE):
-            for i in range(self.__class__.NR_LINII - 3):
-                linii += self.linie_deschisa([self.matr[k][j] for k in range(i, i + 4)], jucator)
-
-        # \
-        for i in range(self.__class__.NR_LINII - 3):
-            for j in range(self.__class__.NR_COLOANE - 3):
-                linii += self.linie_deschisa([self.matr[i + k][j + k] for k in range(0, 4)], jucator)
-
-        # /
-        for i in range(self.__class__.NR_LINII - 3):
-            for j in range(3, self.__class__.NR_COLOANE):
-                linii += self.linie_deschisa([self.matr[i + k][j - k] for k in range(0, 4)], jucator)
-
-        return linii
-
-        """return (self.linie_deschisa(self.matr[0:3],jucator) 
-            + self.linie_deschisa(self.matr[3:6], jucator) 
-            + self.linie_deschisa(self.matr[6:9], jucator)
-            + self.linie_deschisa(self.matr[0:9:3], jucator)
-            + self.linie_deschisa(self.matr[1:9:3], jucator)
-            + self.linie_deschisa(self.matr[2:9:3], jucator)
-            + self.linie_deschisa(self.matr[0:9:4], jucator) #prima diagonala
-            + self.linie_deschisa(self.matr[2:8:2], jucator)) # a doua diagonala
-        """
-
     def calcul_scor1(self, jucator):
 
         scor = 0
@@ -507,13 +421,13 @@ class Joc:
         if jucator == '0':
             for i in range(self.__class__.NR_LINII):
                 for j in range(self.__class__.NR_COLOANE):
-                    if self.matr[i][j] == jucator:
+                    if self.matr[i][j] == jucator and abs(i-j) < 3:
                         scor +=  (7 - abs(i-j))
 
         if jucator == 'x':
             for i in range(self.__class__.NR_LINII):
                 for j in range(self.__class__.NR_COLOANE):
-                    if self.matr[i][j] == 'x':
+                    if self.matr[i][j] == 'x' and abs(i+j-7) < 3:
                         scor += (7 - abs(i+j-7))
 
         return scor
@@ -544,7 +458,7 @@ class Joc:
         elif t_final == self.__class__.JMIN:
             return (-self.__class__.scor_maxim - adancime)
         else:
-            return (self.calcul_scor2(self.__class__.JMAX) - self.calcul_scor2(self.__class__.JMIN))
+            return (self.calcul_scor1(self.__class__.JMAX) - self.calcul_scor1(self.__class__.JMIN))
 
     def sirAfisare(self):
         sir = "  |"
