@@ -46,7 +46,7 @@ class Joc:
                 self.__class__.NR_COLOANE = NR_COLOANE
 
             ######## calculare scor maxim ###########
-            self.__class__.scor_maxim = 16
+            self.__class__.scor_maxim = 560
 
     def deseneaza_grid(self):  # tabla de exemplu este ["#","x","#","0",......]
 
@@ -411,10 +411,12 @@ class Joc:
                                     if jn not in l_mutari:
                                         l_mutari.append(jn)
 
-
         return l_mutari
 
     def calcul_scor1(self, jucator):
+
+        # Avand doar 11 piese maxim, orice piesa pusa la o distanta mai mare de 2 de diagonala jucatorului
+        # va fi inutila in castigarea meciului, de aceea vom puncta doar cele puse pe diagonala, la 1 distanta sau 2
 
         scor = 0
 
@@ -422,17 +424,19 @@ class Joc:
             for i in range(self.__class__.NR_LINII):
                 for j in range(self.__class__.NR_COLOANE):
                     if self.matr[i][j] == jucator and abs(i-j) < 3:
-                        scor +=  (7 - abs(i-j))
+                        scor +=  10 * (7 - abs(i-j))
 
         if jucator == 'x':
             for i in range(self.__class__.NR_LINII):
                 for j in range(self.__class__.NR_COLOANE):
                     if self.matr[i][j] == 'x' and abs(i+j-7) < 3:
-                        scor += (7 - abs(i+j-7))
+                        scor += 10 * (7 - abs(i+j-7))
 
         return scor
 
     def calcul_scor2(self, jucator):
+
+        # Punctam numai diagonala jucatorului
 
         scor = 0
 
@@ -780,6 +784,12 @@ def main():
     while True:
 
         if (stare_curenta.j_curent == Joc.JMIN):
+
+            """ La miscarea jucatorului, trec prin mai multe faze de timp.
+            Daca sunt la pozitia 0, pot pune o piesa intr-un colt sau sa aleg sa mut alta piesa
+            Daca pun o piesa noua, ea trece la posibilitatea de a muta piesa sau a trece la urmatoarea mutare
+            Daca aleg sa mut o piesa, aceasta trece la aceeasi posibilitate ca mai devreme dar cu posibilitatea
+            suplimentara de a captura alte piese. """
 
             if pozitie_timp == 2:
                 # afisarea starii jocului in urma mutarii utilizatorului
